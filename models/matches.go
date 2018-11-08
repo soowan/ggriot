@@ -158,7 +158,7 @@ type MatchData struct {
 			} `json:"goldPerMinDeltas"`
 			CreepsPerMinDeltas struct {
 				Two030 float64 `json:"20-30"`
-				Zero10 int     `json:"0-10"`
+				Zero10 float64 `json:"0-10"`
 				One020 float64 `json:"10-20"`
 			} `json:"creepsPerMinDeltas"`
 			XpPerMinDeltas struct {
