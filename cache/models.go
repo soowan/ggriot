@@ -9,7 +9,7 @@ type Cached struct {
 	gorm.Model
 
 	CallKey string `sql:"string"`
-	JSON    string `gorm:"type:jsonb;not null"`
+	JSON    string `sql:"type:jsonb"`
 }
 
 // Summoner is a custom type struct.
