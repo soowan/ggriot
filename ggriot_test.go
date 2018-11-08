@@ -14,16 +14,16 @@ func TestActiveGame(t *testing.T) {
 }
 
 func TestGetActiveGame(t *testing.T) {
-	e, err := MasteryList(NA, 21669611)
+	e, err := MasteryList(NA, "oZLkcJocnRuDDzaLIpvhhW5BEKq_z1qshEjvBiU")
 	if err != nil {
 		t.Error(err)
 	}
 
-	log.Println((*e)[0].PlayerID)
+	log.Println((*e)[0].SummonerID)
 }
 
 func TestGetTotalMasteryLevel(t *testing.T) {
-	e, err := TotalMasteryLevel(NA, 21669611)
+	e, err := TotalMasteryLevel(NA, "oZLkcJocnRuDDzaLIpvhhW5BEKq_z1qshEjvBiU")
 	if err != nil {
 		t.Error(err)
 	}
@@ -50,7 +50,7 @@ func TestGetMasters(t *testing.T) {
 }
 
 func TestGetPlayerPosition(t *testing.T) {
-	e, err := PlayerPosition(NA, 21669611)
+	e, err := PlayerPosition(NA, "oZLkcJocnRuDDzaLIpvhhW5BEKq_z1qshEjvBiU")
 	if err != nil {
 		t.Error(err)
 	}

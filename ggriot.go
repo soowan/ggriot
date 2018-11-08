@@ -26,28 +26,28 @@ var (
 	Base = "api.riotgames.com/lol"
 
 	// BaseMastery is the path for mastery api calls.
-	BaseMastery = "/champion-mastery/v3"
+	BaseMastery = "/champion-mastery/v4"
 
 	// BaseChampion is the path for champion api calls.
-	BaseChampion = "/platform/v3/champions"
+	BaseChampion = "/platform/v4/champions"
 
 	// BaseChampionR is he path for champion rotation api calls.
-	BaseChampionR = "/platform/v3/champion-rotations"
+	BaseChampionR = "/platform/v4/champion-rotations"
 
 	// BaseLeague is the path for ranked leagues api calls.
-	BaseLeague = "/league/v3"
+	BaseLeague = "/league/v4"
 
 	// BaseStatus is the path for service status api calls.
 	BaseStatus = "/status/v3/shard-data"
 
 	// BaseMatch is the path for match data api calls.
-	BaseMatch = "/match/v3"
+	BaseMatch = "/match/v4"
 
 	// BaseSpectator is the path for spectator api calls.
-	BaseSpectator = "/spectator/v3"
+	BaseSpectator = "/spectator/v4"
 
 	// BaseSummoner is the path for summoner information api calls.
-	BaseSummoner = "/summoner/v3/summoners"
+	BaseSummoner = "/summoner/v4/summoners"
 
 	// BaseTPC is the path for using third party codes to verify summoners via api calls.
 	BaseTPC = "/platform/v3/third-party-code/by-summoner"

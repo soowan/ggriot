@@ -23,10 +23,10 @@ type ActiveGame struct {
 			PerkIds      []int `json:"perkIds"`
 			PerkSubStyle int   `json:"perkSubStyle"`
 		} `json:"perks"`
-		Spell2ID   int `json:"spell2Id"`
-		TeamID     int `json:"teamId"`
-		Spell1ID   int `json:"spell1Id"`
-		SummonerID int `json:"summonerId"`
+		Spell2ID   int    `json:"spell2Id"`
+		TeamID     int    `json:"teamId"`
+		Spell1ID   int    `json:"spell1Id"`
+		SummonerID string `json:"summonerId"`
 	} `json:"participants"`
 	GameLength      int `json:"gameLength"`
 	BannedChampions []struct {

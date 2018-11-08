@@ -49,9 +49,8 @@ func Match(region string, matchID int64) (md *models.MatchData, err error) {
 // In order to get stats you have to request every game separately.
 // TODO: Add ability to fully use the options when doing a matches call.
 // TODO: Figure out if/how this can/should be cached.
-func MatchHistory(region string, accountID int64) (ms *models.MatchHistory, err error) {
-	accID := strconv.FormatInt(accountID, 10)
-	err = apiRequest("https://"+region+"."+Base+BaseMatch+"/matchlists/by-account/"+accID, &ms)
+func MatchHistory(region string, accountID string) (ms *models.MatchHistory, err error) {
+	err = apiRequest("https://"+region+"."+Base+BaseMatch+"/matchlists/by-account/"+accountID, &ms)
 	if err != nil {
 		return nil, err
 	}
