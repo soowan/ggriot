@@ -19,6 +19,13 @@ var (
 	ErrSoftRateLimitExceed = errors.New("ggriot: Soft rate limit reached")
 )
 
+type JSONError struct {
+	Status struct {
+		Message    string `json:"message"`
+		StatusCode int    `json:"status_code"`
+	} `json:"status"`
+}
+
 func returnErr(res *http.Response) error {
 	var jsonError JSONError
 
