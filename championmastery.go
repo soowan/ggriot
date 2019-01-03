@@ -2,11 +2,9 @@ package ggriot
 
 import (
 	"strconv"
+	"strings"
 	"time"
 
-	"github.com/jinzhu/gorm"
-	"github.com/json-iterator/go"
-	"github.com/pkg/errors"
 	"github.com/soowan/ggriot/cache"
 	"github.com/soowan/ggriot/models"
 )
@@ -21,45 +19,15 @@ var (
 
 // MasteryList will return a struct with all the summoners champions and mastery exp/level.
 func MasteryList(region string, summonerID string) (ml *models.MasteryList, err error) {
-	if cache.Enabled == true {
-		ct := "mastery_by_summoner"
-		var cc cache.Cached
-
-		er := cache.CDB.Table(ct+"_"+region).Where("call_key = ?", summonerID).First(&cc).Error
-		switch er {
-		case gorm.ErrRecordNotFound:
-			if err = apiRequest("https://"+region+"."+Base+BaseMastery+"/champion-masteries/by-summoner/"+summonerID, &ml); err != nil {
-				return ml, err
-			}
-
-			if err = cache.StoreCall(ct, region, summonerID, &ml); err != nil {
-				return ml, err
-			}
-
-			return ml, err
-		case nil:
-			if time.Since(cc.UpdatedAt) > GetMasteryListExpire {
-
-				if err = apiRequest("https://"+region+"."+Base+BaseMastery+"/champion-masteries/by-summoner/"+summonerID, &ml); err != nil {
-					return ml, err
-				}
-
-				cache.UpdateCall(ct, region, &cc, &ml)
-
-				return ml, nil
-
-			}
-
-			jsoniter.UnmarshalFromString(cc.JSON, &ml)
-
-			return ml, nil
-		default:
-			return ml, errors.New("ggriot: unknown error, please open github issue: " + er.Error())
-		}
+	cp := cache.CachedParams{
+		Cached:     true,
+		Expire:     true,
+		Expiration: GetMasteryListExpire,
+		CallType:   strings.ToLower("mastery_by_summoner_" + region),
+		CallKey:    summonerID,
 	}
-
-	if err = apiRequest("https://"+region+"."+Base+BaseMastery+"/champion-masteries/by-summoner/"+summonerID, &ml); err != nil {
-		return ml, err
+	if err = apiRequest("https://"+region+"."+Base+BaseMastery+"/champion-masteries/by-summoner/"+summonerID, &ml, cp); err != nil {
+		return nil, err
 	}
 
 	return ml, nil
@@ -68,55 +36,27 @@ func MasteryList(region string, summonerID string) (ml *models.MasteryList, err 
 // ChampionMastery will return a single champion mastery struct
 // TODO: Add special case for this, as it uses two inputs.
 func ChampionMastery(region string, summonerID string, championID int) (ml *models.MasteryList, err error) {
-	chamID := strconv.Itoa(championID)
-	err = apiRequest("https://"+region+"."+Base+BaseMastery+"/champion-masteries/by-summoner/"+summonerID+"/by-champion"+chamID+apikey, &ml)
-	if err != nil {
-		return ml, err
+	cp := cache.CachedParams{
+		Cached: false,
 	}
+	if err = apiRequest("https://"+region+"."+Base+BaseMastery+"/champion-masteries/by-summoner/"+summonerID+"/by-champion"+strconv.Itoa(championID), &ml, cp); err != nil {
+		return nil, err
+	}
+
 	return ml, nil
 }
 
 // TotalMasteryLevel gets the total mastery level.
 func TotalMasteryLevel(region string, summonerID string) (ml int, err error) {
-	if cache.Enabled == true {
-		ct := "mastery_level"
-		var cc cache.Cached
-
-		er := cache.CDB.Table(ct+"_"+region).Where("call_key = ?", summonerID).First(&cc).Error
-		switch er {
-		case gorm.ErrRecordNotFound:
-			if err = apiRequest("https://"+region+"."+Base+BaseMastery+"/scores/by-summoner/"+summonerID, &ml); err != nil {
-				return ml, err
-			}
-
-			if err = cache.StoreCall(ct, region, summonerID, &ml); err != nil {
-				return ml, err
-			}
-
-			return ml, err
-		case nil:
-			if time.Since(cc.UpdatedAt) > GetTotalMasteryLevelExpire {
-
-				if err = apiRequest("https://"+region+"."+Base+BaseMastery+"/scores/by-summoner/"+summonerID, &ml); err != nil {
-					return ml, err
-				}
-
-				cache.UpdateCall(ct, region, &cc, &ml)
-
-				return ml, nil
-
-			}
-
-			jsoniter.UnmarshalFromString(cc.JSON, &ml)
-
-			return ml, nil
-		default:
-			return ml, errors.New("ggriot: unknown error, please open github issue: " + er.Error())
-		}
+	cp := cache.CachedParams{
+		Cached:     true,
+		Expire:     true,
+		Expiration: GetTotalMasteryLevelExpire,
+		CallType:   strings.ToLower("mastery_level_" + region),
+		CallKey:    summonerID,
 	}
-
-	if err = apiRequest("https://"+region+"."+Base+BaseMastery+"/scores/by-summoner/"+summonerID, &ml); err != nil {
-		return ml, err
+	if err = apiRequest("https://"+region+"."+Base+BaseMastery+"/scores/by-summoner/"+summonerID, &ml, cp); err != nil {
+		return 0, err
 	}
 
 	return ml, nil

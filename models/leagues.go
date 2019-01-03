@@ -20,6 +20,20 @@ type LeagueRoster struct {
 	} `json:"entries"`
 }
 
+// MGCTierList is the interface for Masters, Grandmaster and Challenger tiers.
+type MGCTierList struct {
+	Tier    string `json:"tier"`
+	Entries []struct {
+		Rank         string `json:"rank"`
+		Wins         int    `json:"wins"`
+		Losses       int    `json:"losses"`
+		SummonerID   string `json:"summonerId"`
+		LeaguePoints int    `json:"leaguePoints"`
+		SummonerName string `json:"summonerName"`
+	} `json:"entries"`
+	LeagueID string `json:"leagueId"`
+}
+
 // LeaguePosition is what's returned when requesting a players league stats.
 type LeaguePosition []struct {
 	QueueType        string `json:"queueType"`
