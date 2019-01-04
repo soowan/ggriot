@@ -1,25 +1,35 @@
 package cache
 
 import (
-	"errors"
-
-	"github.com/jinzhu/gorm"
-
-	// This is how GORM does dialects, must use a blank import.
-	_ "github.com/jinzhu/gorm/dialects/postgres"
+	"github.com/jackc/pgx"
+	"log"
+	"strings"
+	"sync"
+	"time"
 )
 
 // CDB is the exported pointer to the opened cache server.
-var CDB *gorm.DB
+var CDB *pgx.ConnPool
 
 // Enabled this is checked to see if ggriot should call the postgres db first or skip calling cache.
 var Enabled = false
 
 // UseCache will open a connection to a postgres server that will be used as a cache server.
 func UseCache(gostring string) (err error) {
-	CDB, err = gorm.Open("postgres", gostring)
+	pgxConfig, err := pgx.ParseConnectionString(gostring)
 	if err != nil {
-		return errors.New("ggriot: error opening cache cb, " + err.Error())
+		return err
+	}
+
+	poolConfig := pgx.ConnPoolConfig{
+		ConnConfig:     pgxConfig,
+		MaxConnections: 80,
+		AcquireTimeout: time.Duration(time.Second * 3),
+	}
+
+	CDB, err = pgx.NewConnPool(poolConfig)
+	if err != nil {
+		return err
 	}
 
 	Enabled = true
@@ -48,21 +58,31 @@ func UseCache(gostring string) (err error) {
 		"league_by_queue",
 		"league_by_id",
 		"league_master_by_queue",
+		"league_grandmaster_by_queue",
 		"league_challenger_by_queue",
 		"league_position_by_summoner",
 		"league_match_by_id",
 		"league_match_tl_by_id",
 		"summoner_by_ign",
-		"mmr",
+		"summoner_by_puuid",
 	}
 
+	var wg sync.WaitGroup
 	for rr := range r {
 		for cc := range c {
-			if CDB.Table(c[cc]+"_"+r[rr]).HasTable(&Cached{}) == false {
-				CDB.Table(c[cc] + "_" + r[rr]).CreateTable(&Cached{})
-			}
+			go func(one string, two string) {
+				wg.Add(1)
+				var d int
+				if err := CDB.QueryRow("select 1 from information_schema.tables where table_name=$1", strings.ToLower(one+"_"+two)).Scan(&d); err == pgx.ErrNoRows {
+					_, err := CDB.Exec(`create table ` + strings.ToLower(one+"_"+two) + `(created_at timestamp with time zone, updated_at timestamp with time zone, key text, response jsonb)`)
+					if err != nil {
+						log.Fatal(err)
+					}
+				}
+				wg.Done()
+			}(c[cc], r[rr])
 		}
 	}
-
+	wg.Wait()
 	return nil
 }

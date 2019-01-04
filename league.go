@@ -1,14 +1,11 @@
 package ggriot
 
 import (
-	"errors"
+	"strings"
 	"time"
 
 	"github.com/soowan/ggriot/models"
 
-	"github.com/jinzhu/gorm"
-
-	"github.com/json-iterator/go"
 	"github.com/soowan/ggriot/cache"
 )
 
@@ -16,11 +13,8 @@ var (
 	// LeagueByIDExpire is how long this call should be considered "fresh".
 	LeagueByIDExpire = time.Duration(15 * time.Minute)
 
-	// ExpireGetChallengers is how long this call should be considered "fresh"
-	ExpireGetChallengers = time.Duration(15 * time.Minute)
-
-	// ExpireGetMasters is how long this call should be considered "fresh"
-	ExpireGetMasters = time.Duration(15 * time.Minute)
+	// ExpireMGC is how long Masters, Grandmasters, Challenger tier list calls should be considered "fresh"
+	ExpireMGC = time.Duration(15 * time.Minute)
 
 	// ExpireGetPlayerPosition is how long this call should be considered "fresh"
 	ExpireGetPlayerPosition = time.Duration(15 * time.Minute)
@@ -28,182 +22,82 @@ var (
 
 // Challengers will return all the challengers in the requested queue.
 // Valid queues are, Ranked5s(RANKED_SOLO_5x5), Flex3s(RANKED_FLEX_TT), and Flex5s(RANKED_FLEX_SR)
-func Challengers(region string, mode string) (lr *models.LeagueRoster, err error) {
-	if cache.Enabled == true {
-		ct := "league_challenger_by_queue"
-		var cc cache.Cached
-
-		switch cache.CDB.Table(ct+"_"+region).Where("call_key = ?", mode).First(&cc).Error {
-		case gorm.ErrRecordNotFound:
-			if err = apiRequest("https://"+region+"."+Base+BaseLeague+"/challengerleagues/by-queue/"+mode, &lr); err != nil {
-				return lr, err
-			}
-
-			if err = cache.StoreCall(ct, region, mode, &lr); err != nil {
-				return lr, err
-			}
-
-			return lr, err
-		case nil:
-			if time.Since(cc.UpdatedAt) > ExpireGetChallengers {
-
-				if err = apiRequest("https://"+region+"."+Base+BaseLeague+"/challengerleagues/by-queue/"+mode, &lr); err != nil {
-					return lr, err
-				}
-
-				cache.UpdateCall(ct, region, &cc, &lr)
-
-				return lr, nil
-
-			}
-
-			jsoniter.UnmarshalFromString(cc.JSON, &lr)
-
-			return lr, nil
-		default:
-			return lr, errors.New("uh unkown error with case i suppose")
-		}
+func Challengers(region string, mode string) (lr *models.MGCTierList, err error) {
+	cp := cache.CachedParams{
+		Cached:     true,
+		Expire:     true,
+		Expiration: ExpireMGC,
+		CallType:   strings.ToLower("league_challenger_by_queue_" + region),
+		CallKey:    mode,
+	}
+	if err = apiRequest("https://"+region+"."+Base+BaseLeague+"/challengerleagues/by-queue/"+mode, &lr, cp); err != nil {
+		return lr, nil
 	}
 
-	if err = apiRequest("https://"+region+"."+Base+BaseLeague+"/challengerleagues/by-queue/"+mode, &lr); err != nil {
-		return lr, err
+	return lr, err
+}
+
+// Grandmasters will return all the challengers in the requested queue.
+// Valid queues are, Ranked5s(RANKED_SOLO_5x5), Flex3s(RANKED_FLEX_TT), and Flex5s(RANKED_FLEX_SR)
+func Grandmasters(region string, mode string) (lr *models.MGCTierList, err error) {
+	cp := cache.CachedParams{
+		Cached:     true,
+		Expire:     true,
+		Expiration: ExpireMGC,
+		CallType:   strings.ToLower("league_grandmaster_by_queue_" + region),
+		CallKey:    mode,
+	}
+	if err = apiRequest("https://"+region+"."+Base+BaseLeague+"/grandmasterleagues/by-queue/"+mode, &lr, cp); err != nil {
+		return lr, nil
 	}
 
-	return lr, nil
+	return lr, err
 }
 
 // Masters returns the roster of all the players in the Masters tier for requested queue.
-func Masters(region string, mode string) (lr *models.LeagueRoster, err error) {
-	if cache.Enabled == true {
-		ct := "league_master_by_queue"
-		var cc cache.Cached
-
-		er := cache.CDB.Table(ct+"_"+region).Where("call_key = ?", mode).First(&cc).Error
-		switch er {
-		case gorm.ErrRecordNotFound:
-			if err = apiRequest("https://"+region+"."+Base+BaseLeague+"/masterleagues/by-queue/"+mode, &lr); err != nil {
-				return lr, err
-			}
-
-			if err = cache.StoreCall(ct, region, mode, &lr); err != nil {
-				return lr, err
-			}
-
-			return lr, err
-		case nil:
-			if time.Since(cc.UpdatedAt) > ExpireGetMasters {
-
-				if err = apiRequest("https://"+region+"."+Base+BaseLeague+"/masterleagues/by-queue/"+mode, &lr); err != nil {
-					return lr, err
-				}
-
-				cache.UpdateCall(ct, region, &cc, &lr)
-
-				return lr, nil
-			}
-
-			jsoniter.UnmarshalFromString(cc.JSON, &lr)
-
-			return lr, nil
-		default:
-			return lr, errors.New("ggriot: unknown error, please open github issue: " + er.Error())
-		}
+func Masters(region string, mode string) (lr *models.MGCTierList, err error) {
+	cp := cache.CachedParams{
+		Cached:     true,
+		Expire:     true,
+		Expiration: ExpireMGC,
+		CallType:   strings.ToLower("league_master_by_queue_" + region),
+		CallKey:    mode,
+	}
+	if err = apiRequest("https://"+region+"."+Base+BaseLeague+"/grandmasterleagues/by-queue/"+mode, &lr, cp); err != nil {
+		return lr, nil
 	}
 
-	if err = apiRequest("https://"+region+"."+Base+BaseLeague+"/masterleagues/by-queue/"+mode, &lr); err != nil {
-		return lr, err
-	}
-
-	return lr, nil
+	return lr, err
 }
 
 // League will return the roster of the league requested, via UUID.
 // You can and will get blocked from this call if you provide invalid UUIDs
 func League(region string, leagueUUID string) (lr *models.LeagueRoster, err error) {
-	if cache.Enabled == true {
-		ct := "league_by_id"
-		var cc cache.Cached
-
-		er := cache.CDB.Table(ct+"_"+region).Where("call_key = ?", leagueUUID).First(&cc).Error
-		switch er {
-		case gorm.ErrRecordNotFound:
-			if err = apiRequest("https://"+region+"."+Base+BaseLeague+"/leagues/"+leagueUUID, &lr); err != nil {
-				return lr, err
-			}
-
-			if err = cache.StoreCall(ct, region, leagueUUID, &lr); err != nil {
-				return lr, err
-			}
-
-			return lr, err
-		case nil:
-			if time.Since(cc.UpdatedAt) > LeagueByIDExpire {
-
-				if err = apiRequest("https://"+region+"."+Base+BaseLeague+"/leagues/"+leagueUUID, &lr); err != nil {
-					return lr, err
-				}
-
-				cache.UpdateCall(ct, region, &cc, &lr)
-
-				return lr, nil
-
-			}
-
-			jsoniter.UnmarshalFromString(cc.JSON, &lr)
-
-			return lr, nil
-		default:
-			return lr, errors.New("ggriot: unknown error, please open github issue: " + er.Error())
-		}
+	cp := cache.CachedParams{
+		Cached:     true,
+		Expire:     true,
+		Expiration: LeagueByIDExpire,
+		CallType:   strings.ToLower("league_by_id_" + region),
+		CallKey:    leagueUUID,
+	}
+	if err = apiRequest("https://"+region+"."+Base+BaseLeague+"/leagues/"+leagueUUID, &lr, cp); err != nil {
+		return lr, nil
 	}
 
-	if err = apiRequest("https://"+region+"."+Base+BaseLeague+"/leagues/"+leagueUUID, &lr); err != nil {
-		return lr, err
-	}
-
-	return lr, nil
+	return lr, err
 }
 
 // PlayerPosition will return the requested players league position in each of the three ranked queues.
 func PlayerPosition(region string, summonerID string) (lp *models.LeaguePosition, err error) {
-	if cache.Enabled == true {
-		ct := "league_position_by_summoner"
-		var cc cache.Cached
-
-		er := cache.CDB.Table(ct+"_"+region).Where("call_key = ?", summonerID).First(&cc).Error
-		switch er {
-		case gorm.ErrRecordNotFound:
-			if err = apiRequest("https://"+region+"."+Base+BaseLeague+"/positions/by-summoner/"+summonerID, &lp); err != nil {
-				return lp, err
-			}
-
-			if err = cache.StoreCall(ct, region, summonerID, &lp); err != nil {
-				return lp, err
-			}
-
-			return lp, err
-		case nil:
-			if time.Since(cc.UpdatedAt) > ExpireGetPlayerPosition {
-
-				if err = apiRequest("https://"+region+"."+Base+BaseLeague+"/positions/by-summoner/"+summonerID, &lp); err != nil {
-					return lp, err
-				}
-
-				cache.UpdateCall(ct, region, &cc, &lp)
-
-				return lp, nil
-			}
-
-			jsoniter.UnmarshalFromString(cc.JSON, &lp)
-
-			return lp, nil
-		default:
-			return lp, errors.New("ggriot: unknown error, please open github issue: " + er.Error())
-		}
+	cp := cache.CachedParams{
+		Cached:     true,
+		Expire:     true,
+		Expiration: ExpireGetPlayerPosition,
+		CallType:   strings.ToLower("league_position_by_summoner_" + region),
+		CallKey:    summonerID,
 	}
-
-	if err = apiRequest("https://"+region+"."+Base+BaseLeague+"/positions/by-summoner/"+summonerID, &lp); err != nil {
-		return lp, err
+	if err = apiRequest("https://"+region+"."+Base+BaseLeague+"/positions/by-summoner/"+summonerID, &lp, cp); err != nil {
+		return nil, err
 	}
 
 	return lp, nil
