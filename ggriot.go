@@ -120,8 +120,9 @@ func apiRequest(request string, s interface{}, cp cache.CachedParams) (err error
 		if er := cache.CDB.QueryRow(`SELECT updated_at, response FROM `+strings.ToLower(cp.CallType)+` WHERE key=$1`, cp.CallKey).Scan(&Updated, &Resp); er != pgx.ErrNoRows {
 			fmt.Println("time-since update = ", time.Since(Updated))
 			fmt.Println("expire time = ", cp.Expiration)
-			fmt.Println(cp.Expire == false || (time.Since(Updated) > cp.Expiration) == true)
-			if cp.Expire == false || (time.Since(Updated) > cp.Expiration) == true {
+			fmt.Println("time since = ", time.Since(Updated) > cp.Expiration)
+			fmt.Println(cp.Expire == false || (time.Since(Updated) > cp.Expiration) == false)
+			if cp.Expire == false || (time.Since(Updated) > cp.Expiration) == false {
 				if er := jsoniter.UnmarshalFromString(Resp, &s); er != nil {
 					return err
 				}
