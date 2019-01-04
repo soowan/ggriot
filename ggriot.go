@@ -1,12 +1,9 @@
 package ggriot
 
 import (
-	"github.com/jackc/pgx"
 	"github.com/soowan/ggriot/cache"
 	"io/ioutil"
 	"net/http"
-	"strings"
-
 	"time"
 
 	"github.com/json-iterator/go"
@@ -106,24 +103,21 @@ func SetAPIKey(key string) {
 // apiRequest is the function that does all the heavy lifting.
 // It also employs a rate limiter that can be changed, depending on the limits of the api key.
 // This drops the connections if the limit is reached, however in the future there maybe an option to use a queue system.
-
 // nolint: gocyclo
 func apiRequest(request string, s interface{}, cp cache.CachedParams) (err error) {
 	if CheckKeySet() == false {
 		return errNoAPI
 	}
 
-	if cp.Cached == true && cache.Enabled == true {
-		var Resp string
-		var Updated time.Time
-		if er := cache.CDB.QueryRow(`SELECT updated_at, response FROM `+strings.ToLower(cp.CallType)+` WHERE key=$1`, cp.CallKey).Scan(&Updated, &Resp); er != pgx.ErrNoRows {
-			if cp.Expire == false || (time.Since(Updated) > cp.Expiration) == false {
-				if er := jsoniter.UnmarshalFromString(Resp, &s); er != nil {
-					return err
-				}
-				return
-			}
-		}
+	// TODO: Figure out how to make this cleaner
+	cErr := cache.ReadCache(&s, &cp)
+	switch cErr {
+	case cache.ErrExpired:
+		break
+	case nil:
+		return
+	default:
+		return cErr
 	}
 
 	if CheckRateLimit() == false {
@@ -153,18 +147,9 @@ func apiRequest(request string, s interface{}, cp cache.CachedParams) (err error
 		return returnErr(res)
 	}
 	resp, _ := ioutil.ReadAll(res.Body)
-	if cp.Cached == true && cache.Enabled == true {
-		switch cache.CDB.QueryRow("SELECT updated_at FROM "+cp.CallType+" WHERE key=$1", cp.CallKey).Scan() {
-		case pgx.ErrNoRows:
-			if _, er := cache.CDB.Exec(`INSERT INTO `+strings.ToLower(cp.CallType)+`(created_at, updated_at, key, response) VALUES($1, $1, $2, $3)`, time.Now(), cp.CallKey, string(resp)); er != nil {
-				return er
-			}
-		default:
-			if _, er := cache.CDB.Exec(`UPDATE `+strings.ToLower(cp.CallType)+` SET updated_at = $1, response = $2 WHERE key = $3`, time.Now(), string(resp), cp.CallKey); err != nil {
-				return er
-			}
-			break
-		}
+
+	if e := cache.StoreCache(&cp, resp); err != nil {
+		return e
 	}
 
 	err = jsoniter.UnmarshalFromString(string(resp), &s)
