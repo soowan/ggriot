@@ -1,7 +1,6 @@
 package cache
 
 import (
-	"fmt"
 	"github.com/jackc/pgx"
 	"log"
 	"strings"
@@ -73,12 +72,9 @@ func UseCache(gostring string) (err error) {
 		for cc := range c {
 			go func(one string, two string) {
 				wg.Add(1)
-				fmt.Println("checking ", one+"_"+two)
 				var d int
 				if err := CDB.QueryRow("select 1 from information_schema.tables where table_name=$1", strings.ToLower(one+"_"+two)).Scan(&d); err == pgx.ErrNoRows {
-					fmt.Println(err)
 					_, err := CDB.Exec(`create table ` + strings.ToLower(one+"_"+two) + `(created_at timestamp with time zone, updated_at timestamp with time zone, key text, response jsonb)`)
-					fmt.Println("creating ", strings.ToLower(one+"_"+two))
 					if err != nil {
 						log.Fatal(err)
 					}
