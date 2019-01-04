@@ -103,6 +103,7 @@ func SetAPIKey(key string) {
 // apiRequest is the function that does all the heavy lifting.
 // It also employs a rate limiter that can be changed, depending on the limits of the api key.
 // This drops the connections if the limit is reached, however in the future there maybe an option to use a queue system.
+
 // nolint: gocyclo
 func apiRequest(request string, s interface{}, cp cache.CachedParams) (err error) {
 	if CheckKeySet() == false {
