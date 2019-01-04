@@ -19,6 +19,7 @@ var (
 	ErrSoftRateLimitExceed = errors.New("ggriot: Soft rate limit reached")
 )
 
+// JSONError is a interface to handle any HTTP errors.
 type JSONError struct {
 	Status struct {
 		Message    string `json:"message"`

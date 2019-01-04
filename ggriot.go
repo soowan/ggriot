@@ -1,8 +1,9 @@
 package ggriot
 
 import (
+	"github.com/soowan/ggriot/cache"
+	"io/ioutil"
 	"net/http"
-
 	"time"
 
 	"github.com/json-iterator/go"
@@ -96,16 +97,32 @@ var (
 
 // SetAPIKey will set the api key for the global session.
 func SetAPIKey(key string) {
-	// apikey is the global api key.
 	apikey = key
 }
 
 // apiRequest is the function that does all the heavy lifting.
 // It also employs a rate limiter that can be changed, depending on the limits of the api key.
 // This drops the connections if the limit is reached, however in the future there maybe an option to use a queue system.
-func apiRequest(request string, s interface{}) (err error) {
+
+// nolint: gocyclo
+func apiRequest(request string, s interface{}, cp cache.CachedParams) (err error) {
 	if CheckKeySet() == false {
 		return errNoAPI
+	}
+
+	// TODO: Figure out how to make this cleaner
+	cErr := cache.ReadCache(&s, &cp)
+	switch cErr {
+	case cache.ErrExpired:
+		break
+	case cache.ErrNoCache:
+		break
+	case cache.ErrNoData:
+		break
+	case nil:
+		return
+	default:
+		return cErr
 	}
 
 	if CheckRateLimit() == false {
@@ -134,8 +151,13 @@ func apiRequest(request string, s interface{}) (err error) {
 	if res.StatusCode != http.StatusOK {
 		return returnErr(res)
 	}
+	resp, _ := ioutil.ReadAll(res.Body)
 
-	err = jsoniter.NewDecoder(res.Body).Decode(&s)
+	if e := cache.StoreCache(&cp, resp); err != nil {
+		return e
+	}
+
+	err = jsoniter.UnmarshalFromString(string(resp), &s)
 	if err != nil {
 		return errors.New("ggriot: decoding json result: " + err.Error())
 	}

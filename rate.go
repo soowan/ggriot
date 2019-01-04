@@ -15,6 +15,7 @@ var (
 	RateLimitingActive bool
 )
 
+// TODO: Rewrite rate limiter; probably
 func init() {
 	RateLimitingActive = true
 	go ShortRateTime()

@@ -20,20 +20,36 @@ type LeagueRoster struct {
 	} `json:"entries"`
 }
 
+// MGCTierList is the interface for Masters, Grandmaster and Challenger tiers.
+type MGCTierList struct {
+	Tier    string `json:"tier"`
+	Entries []struct {
+		Rank         string `json:"rank"`
+		Wins         int    `json:"wins"`
+		Losses       int    `json:"losses"`
+		SummonerID   string `json:"summonerId"`
+		LeaguePoints int    `json:"leaguePoints"`
+		SummonerName string `json:"summonerName"`
+	} `json:"entries"`
+	LeagueID string `json:"leagueId"`
+}
+
 // LeaguePosition is what's returned when requesting a players league stats.
 type LeaguePosition []struct {
-	QueueType        string `json:"queueType"`
-	HotStreak        bool   `json:"hotStreak"`
-	Wins             int    `json:"wins"`
-	Veteran          bool   `json:"veteran"`
-	Losses           int    `json:"losses"`
-	PlayerOrTeamID   string `json:"playerOrTeamId"`
-	LeagueName       string `json:"leagueName"`
-	PlayerOrTeamName string `json:"playerOrTeamName"`
-	Inactive         bool   `json:"inactive"`
-	Rank             string `json:"rank"`
-	FreshBlood       bool   `json:"freshBlood"`
-	LeagueID         string `json:"leagueId"`
-	Tier             string `json:"tier"`
-	LeaguePoints     int    `json:"leaguePoints"`
+	Rank         string `json:"rank"`
+	Tier         string `json:"tier"`
+	Wins         int    `json:"wins"`
+	Losses       int    `json:"losses"`
+	LeagueID     string `json:"leagueId"`
+	QueueType    string `json:"queueType"`
+	LeagueName   string `json:"leagueName"`
+	SummonerID   string `json:"summonerId"`
+	LeaguePoints int    `json:"leaguePoints"`
+	SummonerName string `json:"summonerName"`
+	MiniSeries   struct {
+		Wins     int    `json:"wins"`
+		Losses   int    `json:"losses"`
+		Target   int    `json:"target"`
+		Progress string `json:"progress"`
+	} `json:"miniSeries,omitempty"`
 }
