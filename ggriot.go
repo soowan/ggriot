@@ -1,6 +1,7 @@
 package ggriot
 
 import (
+	"fmt"
 	"github.com/jackc/pgx"
 	"github.com/soowan/ggriot/cache"
 	"io/ioutil"
@@ -116,8 +117,9 @@ func apiRequest(request string, s interface{}, cp cache.CachedParams) (err error
 	if cp.Cached == true && cache.Enabled == true {
 		var Resp string
 		var Updated time.Time
-		if er := cache.CDB.QueryRow(`SELECT updated_at, response FROM `+strings.ToLower(cp.CallType)+` WHERE key=$1`, cp.CallKey).Scan(&Updated, &Resp); er != pgx.ErrNoRows {
-			if cp.Expire == false || time.Since(Updated) > cp.Expiration {
+		if er := cache.CDB.QueryRow(`SELECT updated_at, response FROM `+strings.ToLower(cp.CallType)+` WHERE key=$1`, cp.CallKey).Scan(&Updated, &Resp); er != pgx.ErrNoRows
+			fmt.Println(cp.Expire == false || (time.Since(Updated) > cp.Expiration) == true)
+			if cp.Expire == false || (time.Since(Updated) > cp.Expiration) == true {
 				if er := jsoniter.UnmarshalFromString(Resp, &s); er != nil {
 					return err
 				}
