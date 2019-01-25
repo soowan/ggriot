@@ -2,6 +2,7 @@ package ggriot
 
 import (
 	"fmt"
+	"github.com/go-redis/redis"
 	"log"
 	"testing"
 
@@ -9,8 +10,14 @@ import (
 )
 
 func TestActiveGame(t *testing.T) {
+	client := redis.NewClient(&redis.Options{
+		Addr: "127.0.0.1:6379",
+		Password: "",
+		DB: 0,
+	})
+
 	SetAPIKey("")
-	err := cache.UseCache("")
+	err := cache.UseCache(client)
 	if err != nil {
 		t.Error(err)
 	}
@@ -55,12 +62,10 @@ func TestGetMasters(t *testing.T) {
 }
 
 func TestGetPlayerPosition(t *testing.T) {
-	e, err := PlayerPosition(NA, "att1mlWZh48J3gVjokJ1NH9h2URkUq4HtGsV8RSEPNWzVv8")
+	_, err := PlayerPosition(NA, "att1mlWZh48J3gVjokJ1NH9h2URkUq4HtGsV8RSEPNWzVv8")
 	if err != nil {
 		t.Error(err)
 	}
-
-	fmt.Println((*e)[0].LeagueName)
 }
 
 func TestGetMatch(t *testing.T) {
@@ -101,4 +106,11 @@ func TestMatchHistory(t *testing.T) {
 	}
 
 	fmt.Println(mh.Matches[0].GameID)
+}
+
+func TestClosing(t *testing.T) {
+	err := cache.RedisConn.Close()
+	if err != nil {
+		t.Fatal(err)
+	}
 }
