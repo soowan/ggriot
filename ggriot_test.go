@@ -6,7 +6,7 @@ import (
 	"log"
 	"testing"
 
-	"github.com/soowan/ggriot/cache"
+	"github.com/tyhi/ggriot/cache"
 )
 
 func TestActiveGame(t *testing.T) {
