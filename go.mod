@@ -1,4 +1,4 @@
-module github.com/soowan/ggriot
+module github.com/tyhi/ggriot
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect

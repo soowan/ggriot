@@ -1,7 +1,7 @@
 package ggriot
 
 import (
-	"github.com/soowan/ggriot/cache"
+	"github.com/tyhi/ggriot/cache"
 	"io/ioutil"
 	"net/http"
 	"time"
@@ -113,8 +113,6 @@ func apiRequest(request string, s interface{}, cp cache.CachedParams) (err error
 	// TODO: Figure out how to make this cleaner
 	cErr := cache.ReadCache(&s, &cp)
 	switch cErr {
-	case cache.ErrExpired:
-		break
 	case cache.ErrNoCache:
 		break
 	case cache.ErrNoData:
