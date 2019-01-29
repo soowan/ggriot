@@ -1,8 +1,8 @@
 package ggriot
 
 import (
-	"github.com/soowan/ggriot/cache"
-	"github.com/soowan/ggriot/models"
+	"github.com/tyhi/ggriot/cache"
+	"github.com/tyhi/ggriot/models"
 )
 
 // ActiveGame will get the active game from the supplied id.

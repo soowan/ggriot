@@ -1,8 +1,8 @@
 package ggriot
 
 import (
-	"github.com/soowan/ggriot/cache"
-	"github.com/soowan/ggriot/models"
+	"github.com/tyhi/ggriot/cache"
+	"github.com/tyhi/ggriot/models"
 )
 
 // ServerStatus returns the current service status for the requested region.

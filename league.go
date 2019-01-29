@@ -3,9 +3,9 @@ package ggriot
 import (
 	"time"
 
-	"github.com/soowan/ggriot/models"
+	"github.com/tyhi/ggriot/models"
 
-	"github.com/soowan/ggriot/cache"
+	"github.com/tyhi/ggriot/cache"
 )
 
 var (
