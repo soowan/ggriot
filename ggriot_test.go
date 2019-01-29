@@ -2,11 +2,11 @@ package ggriot
 
 import (
 	"fmt"
-	"github.com/go-redis/redis"
 	"log"
 	"testing"
 
-	"github.com/soowan/ggriot/cache"
+	"github.com/go-redis/redis"
+	"github.com/tyhi/ggriot/cache"
 )
 
 func TestActiveGame(t *testing.T) {
