@@ -2,6 +2,8 @@ package cache
 
 import (
 	"errors"
+	"fmt"
+	"github.com/cespare/xxhash"
 	"github.com/go-redis/redis"
 	"github.com/json-iterator/go"
 )
@@ -17,7 +19,7 @@ var (
 // ReadCache will return the cached call from redis.
 func ReadCache(s interface{}, cp *CachedParams) error {
 	if cp.Cached == true && Enabled == true {
-		val, err := RedisConn.Get(cp.CallKey + "_" + cp.CallType).Bytes()
+		val, err := RedisConn.Get(fmt.Sprint(xxhash.Sum64String(cp.CallKey+"_"+cp.CallType))).Bytes()
 		switch err {
 		case redis.Nil:
 			return ErrNoData
@@ -39,11 +41,11 @@ func StoreCache(cp *CachedParams, resp []byte) (err error) {
 	if cp.Cached == true && Enabled == true {
 		switch cp.Expire {
 		case true:
-			if err := RedisConn.Set(cp.CallKey+"_"+cp.CallType, resp, cp.Expiration).Err(); err != nil {
+			if err := RedisConn.Set(fmt.Sprint(xxhash.Sum64String(cp.CallKey+"_"+cp.CallType)), resp, cp.Expiration).Err(); err != nil {
 				return err
 			}
 		case false:
-			if err := RedisConn.Set(cp.CallKey+"_"+cp.CallType, resp, 0).Err(); err != nil {
+			if err := RedisConn.Set(fmt.Sprint(xxhash.Sum64String(cp.CallKey+"_"+cp.CallType)), resp, 0).Err(); err != nil {
 				return err
 			}
 		}

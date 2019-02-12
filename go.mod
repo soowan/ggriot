@@ -1,6 +1,7 @@
-module github.com/soowan/ggriot
+module github.com/tyhi/ggriot
 
 require (
+	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-redis/redis v6.15.1+incompatible
 	github.com/json-iterator/go v1.1.5
