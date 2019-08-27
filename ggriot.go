@@ -1,7 +1,7 @@
 package ggriot
 
 import (
-	"github.com/soowan/ggriot/cache"
+	"github.com/tyhi/ggriot/cache"
 	"io/ioutil"
 	"net/http"
 	"time"
