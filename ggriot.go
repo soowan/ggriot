@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"time"
-
 	"github.com/json-iterator/go"
 	"github.com/pkg/errors"
 )
